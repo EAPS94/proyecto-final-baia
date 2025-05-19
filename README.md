@@ -1,6 +1,6 @@
 # 📊 Generador de Informes de Índices de Gas Natural
 
-Este proyecto permite generar reportes automatizados y visualizaciones interactivas sobre precios de índices de gas natural, combinando el análisis de datos históricos con estimaciones futuras. Está construido en Python con [Streamlit](https://streamlit.io/) como interfaz interactiva, y aprovecha modelos de lenguaje (GPT) para análisis textual y generación de código de visualización.
+Este proyecto permite generar reportes automatizados y visualizaciones interactivas sobre precios de índices de gas natural, combinando el análisis de datos históricos con estimaciones futuras. Está construido en Python con `Streamlit` como interfaz interactiva, y aprovecha modelos de lenguaje (GPT) para análisis textual y generación de código de visualización.
 
 ## 🎯 Objetivo
 
