@@ -41,6 +41,13 @@ indice_seleccionado_valor = st.sidebar.selectbox("Selecciona un índice para ana
 indice = [k for k, v in indice_nombres.items() if v == indice_seleccionado_valor][0]
 nombre_completo = indice_nombres[indice]
 
+# 🧼 Reiniciar análisis generado si cambia el índice seleccionado
+if "indice_anterior" not in st.session_state:
+    st.session_state["indice_anterior"] = indice
+elif st.session_state["indice_anterior"] != indice:
+    st.session_state["indice_anterior"] = indice
+    st.session_state["reporte_generado"] = None
+
 # 📈 Función de resumen estadístico robustecida
 def resumir_indice(nombre, df_hist, df_fut):
     df_hist['fecha'] = pd.to_datetime(df_hist['fecha'], dayfirst=True)
