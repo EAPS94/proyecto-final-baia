@@ -67,6 +67,7 @@ Puedes ver una demostración completa del funcionamiento de esta aplicación web
 🔗 [Ver video demo del Generador de Informes Automatizado](https://drive.google.com/drive/folders/1n6X4x0zrTug4-Q4aW724Lq-YjC28iwNW?usp=sharing)
 
 Este video muestra el flujo completo desde la selección del índice, la generación del análisis automatizado, hasta la creación interactiva de visualizaciones a partir de instrucciones en lenguaje natural.
+
 ---
 
 ### 👨‍🏫 **Uso académico**
