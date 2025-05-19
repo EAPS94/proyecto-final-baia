@@ -9,7 +9,7 @@ from pydantic_ai import Agent
 from pydantic_ai.models.openai import OpenAIModel
 
 # 🧠 Modelo de lenguaje a utilizar
-MODELO_LLM = "gpt-4"  # Puedes cambiar a "gpt-4", "gpt-3.5-turbo", "gpt-4.1-nano", etc
+MODELO_LLM = "gpt-4.1"  # Puedes cambiar a "gpt-4", "gpt-3.5-turbo", "gpt-4.1-nano", etc
 
 # 📌 Cargar clave API desde config.yaml
 with open("config.yaml", "r") as f:
@@ -235,7 +235,7 @@ if peticion_usuario.strip():
 
     Tu respuesta debe cumplir con el siguiente formato exacto y sin desviaciones:
 
-    Prompt sugerido: <un par de líneas claras, comenzando con un verbo, que indique qué se debe visualizar, con qué variables y usando qué archivos>
+    Prompt sugerido: <una línea claras, comenzando con un verbo, que indique qué se debe visualizar, con qué variables>
 
     ipo de gráfico recomendado: <nombre del gráfico (como línea, barras, etc.) seguido de una breve explicación contextual del por qué es adecuado, por ejemplo: “Gráfico de líneas — ideal para observar evolución temporal en datos combinados de precios históricos y estimaciones.”>
 
@@ -303,11 +303,11 @@ Contexto:
 - Estás trabajando con dos archivos CSV: "historico.csv" y "estimaciones.csv".
 - El archivo "historico.csv" contiene precios diarios de gas natural por índice.
 - El archivo "estimaciones.csv" contiene precios estimados como promedios mensuales para los mismos índices.
-- Para una comparación válida entre ambos archivos, debes agregar (agrupar) los precios diarios del histórico por mes, obteniendo su promedio mensual.
+- En caso de querer realizar una comparación válida entre ambos archivos, debes agregar (agrupar) los precios diarios del histórico por mes, obteniendo su promedio mensual.
 - Debes utilizar la biblioteca {libreria}.
 - La visualización debe desplegarse con sintaxis de Streamlit y seguir buenas prácticas de presentación visual.
 - Prioriza la aplicación de los principios de Edward Tufte y las mejores prácticas de visualización de datos: evita el ruido visual innecesario, prioriza la claridad, la densidad informativa y el uso eficiente del espacio, y resalta patrones significativos sin distorsionar la escala.
-
+- No incluyas encabezados, explicaciones, listas adicionales ni texto solo código Python válido.
 
 Descripción del conjunto de datos:
 <descripción>
@@ -342,7 +342,7 @@ Instrucciones:
 - Siempre que se use `pd.to_datetime`, utiliza `dayfirst=True` para asegurar el formato correcto de fechas como "13/01/2022".
 - Si el análisis incluye datos históricos y estimaciones, usa elementos separadas con estilos diferentes (color, trazo, etc) para distinguirlos.
 - Prioriza la aplicación de los principios de Edward Tufte y las mejores prácticas de visualización de datos: evita el ruido visual innecesario, prioriza la claridad, la densidad informativa y el uso eficiente del espacio, y resalta patrones significativos sin distorsionar la escala.
-- No incluyas explicaciones, comentarios, ni texto descriptivo adicional.
+- No incluyas explicaciones, comentarios, ni texto descriptivo adicional al código en Python.
 - No uses markdown ni encierres el código con delimitadores como ``` o bloques de código.
 - El código debe estar en Python puro, ser ejecutable directamente, y centrado únicamente en la visualización.
 - Usa los valores estadísticos proporcionados (máximo, mínimo, promedio, cuartiles, etc.) como referencia para configurar escalas, ejes y rangos visibles en la gráfica.
