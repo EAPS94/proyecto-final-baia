@@ -1,0 +1,14 @@
+# Entorno virtual
+baia-venv/
+
+# Datos y pruebas locales
+data/
+pruebas/
+
+# Clave privada y configuración sensible
+config.yaml
+
+# Archivos del sistema
+__pycache__/
+*.pyc
+.DS_Store
