@@ -9,7 +9,7 @@ from pydantic_ai import Agent
 from pydantic_ai.models.openai import OpenAIModel
 
 # 🧠 Modelo de lenguaje a utilizar
-MODELO_LLM = "gpt-3.5-turbo"  # Puedes cambiar a "gpt-4", "gpt-3.5-turbo", "gpt-4.1-nano", etc
+MODELO_LLM = "gpt-4"  # Puedes cambiar a "gpt-4", "gpt-3.5-turbo", "gpt-4.1-nano", etc
 
 # 📌 Cargar clave API desde config.yaml
 with open("config.yaml", "r") as f:
@@ -111,6 +111,8 @@ Paso 3: Formula implicaciones concretas para compradores y proveedores de gas na
 - Si los precios futuros son significativamente mayores o menores que los históricos, podría haber oportunidad o riesgo comercial.
 - Cualquier patrón detectado que pueda influir en decisiones de compra, venta o planificación financiera.
 
+Considera que los precios históricos tienen frecuencia diaria y los precios proyectados son promedios mensuales, por lo que cualquier comparación debe contemplar esta diferencia de granularidad temporal.
+
 Resumen estadístico del índice {resumen_indice['Índice']}:
 - Fecha mínima histórica: {resumen_indice['Fecha mínima histórica']}
 - Fecha máxima histórica: {resumen_indice['Fecha máxima histórica']}
@@ -162,14 +164,25 @@ if st.session_state["reporte_generado"]:
     st.markdown(st.session_state["reporte_generado"])
 
 # 📑 Preparar metadata
-st.session_state.dataframe = df_historico[['fecha', indice]].copy()
 st.session_state.metadata = {
-    "archivo": "historico.csv",
-    "descripción": f"Precios diarios históricos del índice {nombre_completo} en USD/MMBtu.",
-    "columnas": {
-        "fecha": "Fecha del registro (YYYY-MM-DD)",
-        indice: f"Precio spot diario del índice {nombre_completo} en USD/MMBtu"
-    }
+    "archivos": ["historico.csv", "estimaciones.csv"],
+    "descripción": (
+        "Ambos archivos contienen precios del gas natural expresados en USD/MMBtu para distintos índices. "
+        "El archivo 'historico.csv' incluye precios diarios observados, mientras que 'estimaciones.csv' contiene "
+        "precios promedio mensuales proyectados."
+    ),
+    "columnas_comunes": {
+        "fecha": (
+            "En 'historico.csv', corresponde a la fecha de registro diario (formato YYYY-MM-DD). "
+            "En 'estimaciones.csv', corresponde a la fecha de proyección mensual (formato YYYY-MM-DD)."
+        ),
+        indice: f"Precio del índice {nombre_completo} en USD/MMBtu."
+    },
+    "nota": (
+        "'historico.csv' representa datos observados del pasado, y 'estimaciones.csv' contiene proyecciones a futuro. "
+        "Ambos archivos deben combinarse para realizar un análisis temporal integral del comportamiento del índice seleccionado."
+        "Para comparar series temporales, convertir los datos diarios de historico.csv a promedios mensuales antes de graficar."
+    )
 }
 
 # 📝 Solicitud del usuario
@@ -194,15 +207,30 @@ if peticion_usuario.strip():
     ---
 
     Tu tarea consiste en:
-    1. Reformular la instrucción del usuario como un prompt claro, conciso y preciso, que inicie con un verbo de acción (por ejemplo: "Mostrar...", "Comparar...", "Visualizar...").
+    1. Reformular la instrucción del usuario como un prompt claro, conciso y específico, que inicie con un verbo de acción (por ejemplo: "Mostrar...", "Comparar...", "Visualizar...") e indique las variables involucradas.
     2. Seleccionar el tipo de gráfico más adecuado (línea, barras, dispersión, boxplot, etc.) en función de los datos y del propósito de análisis.
-    3. Describir en una línea el objetivo de la visualización, alineado con las buenas prácticas analíticas y de comunicación visual.
+    3. Describir de manera clara, concisa y efectiva el objetivo principal de la visualización: debe resumir claramente el propósito analítico, como detectar patrones, comparar grupos, analizar dispersión o apoyar la toma de decisiones.
+    4. ⚠️ Si la instrucción implica comparar precios históricos (`historico.csv`) con proyecciones (`estimaciones.csv`), recuerda que los primeros son precios diarios y los segundos promedios mensuales. Agrega una sugerencia clara de que se debe:
+        - Agregar los precios diarios mensualmente (usando `.dt.to_period('M').dt.to_timestamp()` seguido de `groupby`)
+        - Alinear los DataFrames antes de graficar.
+    5. Como referencia opcional, puedes consultar esta tabla de sugerencias con estructuras típicas de visualización. Utilízala solo si consideras que complementa tu recomendación y mejora la claridad del prompt. Estas plantillas no son obligatorias:
+        - **Línea**: Usa `px.line` con `x=fecha` y `y=precio`. Para `historico.csv`, utiliza precios diarios. Para `estimaciones.csv`, los precios son promedio mensual. Si deseas comparar ambos, primero agrega los precios diarios de `historico.csv` a nivel mensual para alinearlos con `estimaciones.csv`, y concatena los DataFrames. Incluye título, etiquetas y ajustes de layout. Ideal para mostrar evolución temporal, identificar tendencias y ciclos.
+        - **Barras**: Usa `px.bar` con variables categóricas como índice, mes o año. Para `historico.csv`, considera agregaciones como media mensual por categoría. Para comparar con `estimaciones.csv`, asegúrate de alinear los periodos (ambos deben ser datos mensuales). Ideal para comparar cantidades entre categorías o periodos agregados.
+        - **Dispersión**: Usa `px.scatter` para analizar correlaciones. Para `historico.csv`, puedes usar día y precio. Para `estimaciones.csv`, generalmente solo hay un punto por mes. Para comparación, considera mostrar ambos como capas o distinguir por color. Ideal para ver relación entre dos variables continuas o comparar dispersión.
+        - **Boxplot**: Usa `px.box` para representar distribución de precios por mes, año o categoría. Ideal para `historico.csv`, agrupando por mes. Para comparar con `estimaciones.csv`, recuerda que ya son medias mensuales, por lo que no aplicaría directamente. Útil para analizar dispersión y valores atípicos.
+        - **Pie**: Usa `px.pie` con variables como índice o región si existen. Usar con `estimaciones.csv` solo si representa proporciones agregadas por categoría. No es ideal para series temporales como `historico.csv`, a menos que se agreguen por periodo. Adecuado para mostrar proporciones dentro de un total.
+        - **Mapa**: Usa `px.choropleth` o `px.scatter_geo` con coordenadas geográficas. Asegúrate de que los datos incluyan ubicación. Aplica igual para datos históricos o estimaciones, o una comparación si ambas contienen regiones equivalentes. Útil para mostrar patrones regionales o distribución espacial.
+        - **Sankey**: Usa `plotly.graph_objects.Sankey` para visualizar flujos entre categorías como índices a regiones o años. Aplica si se cuenta con datos categóricos de transición, lo cual suele derivarse de agregaciones sobre `historico.csv`. Ideal para visualizar relaciones de flujo entre clases.
+
+        Estas plantillas te orientan para construir visualizaciones más efectivas según el contexto del análisis, pero no sustituyen tu criterio profesional, es decir, son meramente orientativas, no son obligatorias.
+
+
 
     Tu respuesta debe cumplir con el siguiente formato exacto y sin desviaciones:
 
-    Prompt sugerido: <un par de líneas claras, comenzando con un verbo, que indique qué se debe visualizar y con qué variables>
+    Prompt sugerido: <un par de líneas claras, comenzando con un verbo, que indique qué se debe visualizar, con qué variables y usando qué archivos>
 
-    Tipo de gráfico recomendado: <nombre del tipo de gráfico más adecuado, como línea, barras, dispersión, etc.>
+    ipo de gráfico recomendado: <nombre del gráfico (como línea, barras, etc.) seguido de una breve explicación contextual del por qué es adecuado, por ejemplo: “Gráfico de líneas — ideal para observar evolución temporal en datos combinados de precios históricos y estimaciones.”>
 
     Objetivo del gráfico: <una sola línea que resuma para qué se usará la visualización, qué patrón, comparación o tendencia se quiere identificar>
 
@@ -265,7 +293,10 @@ peticion_final = st.text_area(
 libreria = "plotly express (usa tamaño de figura 800 x 600)"
 prompt_visual = f"""
 Contexto:
-- Los datos están disponibles en formato CSV.
+- Estás trabajando con dos archivos CSV: "historico.csv" y "estimaciones.csv".
+- El archivo "historico.csv" contiene precios diarios de gas natural por índice.
+- El archivo "estimaciones.csv" contiene precios estimados como promedios mensuales para los mismos índices.
+- Para una comparación válida entre ambos archivos, debes agregar (agrupar) los precios diarios del histórico por mes, obteniendo su promedio mensual.
 - Debes utilizar la biblioteca {libreria}.
 - La visualización debe desplegarse con sintaxis de Streamlit y seguir buenas prácticas de presentación visual.
 - Prioriza la aplicación de los principios de Edward Tufte y las mejores prácticas de visualización de datos: evita el ruido visual innecesario, prioriza la claridad, la densidad informativa y el uso eficiente del espacio, y resalta patrones significativos sin distorsionar la escala.
@@ -294,9 +325,15 @@ system_prompt_visual = f"""
 Tu tarea es generar visualizaciones de datos utilizando Python y Streamlit.
 
 Instrucciones:
+- Estás trabajando con dos archivos: "historico.csv" (precios diarios) y "estimaciones.csv" (precios promedios mensuales).
+- Para realizar comparaciones válidas, los precios del archivo "historico.csv" deben agregarse por mes utilizando el promedio mensual antes de graficarse.
+- Para calcular promedios mensuales de precios en `historico.csv`, usa `.dt.to_period('M').dt.to_timestamp()` sobre la columna de fecha, y luego agrupa con `groupby` antes de hacer la unión con `estimaciones.csv`.
+- Utiliza la biblioteca Plotly Express o Plotly Graph Objects para construir gráficos claros, legibles y efectivos.
 - Genera el tipo de gráfico más adecuado (línea, barras, dispersión, boxplot, etc.) según la estructura del archivo de datos y las estadísticas previamente calculadas.
 - El gráfico debe facilitar la interpretación de tendencias, distribución, dispersión o relaciones relevantes del índice seleccionado.
 - Puedes volver a leer el archivo CSV si es necesario para construir la visualización.
+- Siempre que se use `pd.to_datetime`, utiliza `dayfirst=True` para asegurar el formato correcto de fechas como "13/01/2022".
+- Si el análisis incluye datos históricos y estimaciones, usa elementos separadas con estilos diferentes (color, trazo, etc) para distinguirlos.
 - Prioriza la aplicación de los principios de Edward Tufte y las mejores prácticas de visualización de datos: evita el ruido visual innecesario, prioriza la claridad, la densidad informativa y el uso eficiente del espacio, y resalta patrones significativos sin distorsionar la escala.
 - No incluyas explicaciones, comentarios, ni texto descriptivo adicional.
 - No uses markdown ni encierres el código con delimitadores como ``` o bloques de código.
